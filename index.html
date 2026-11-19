@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f8f3ea" />
+  <meta name="description" content="Hisaab — a simple offline shop ledger for credit and payments." />
+  <title>Hisaab · Shop Ledger</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="app-header" id="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">₹</span>
+        <div class="brand-text">
+          <h1 class="brand-name">Hisaab</h1>
+          <p class="brand-sub">Shop ledger</p>
+        </div>
+      </div>
+      <span class="local-pill" title="Saved in this browser">
+        <span class="local-dot" aria-hidden="true"></span>On device
+      </span>
+    </header>
+
+    <section class="summary" aria-label="Shop outstanding summary">
+      <div class="summary-top">
+        <span class="summary-label">Total outstanding</span>
+        <span class="summary-chip" id="summary-chip">0 due</span>
+      </div>
+      <div class="summary-amount">
+        <span class="summary-cur" aria-hidden="true">₹</span>
+        <span id="total-outstanding">0</span>
+      </div>
+      <p class="summary-foot" id="summary-foot">Nothing recorded yet</p>
+    </section>
+
+    <div class="search-wrap">
+      <div class="search">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8" />
+          <path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+        <input id="search" type="search" placeholder="Search name or number" autocomplete="off" spellcheck="false" aria-label="Search customers" />
+        <button class="search-clear" id="search-clear" type="button" aria-label="Clear search" hidden>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="list-head">
+      <h2>Customers</h2>
+      <span class="count-pill" id="list-count">0</span>
+    </div>
+
+    <ul class="customer-list" id="customer-list"></ul>
+
+    <div class="empty" id="empty-state" hidden>
+      <svg class="empty-art" viewBox="0 0 120 100" fill="none" aria-hidden="true">
+        <rect x="18" y="14" width="84" height="72" rx="10" fill="#fffdf9" stroke="#e0d5c1" stroke-width="2" />
+        <path d="M18 32h84" stroke="#e0d5c1" stroke-width="2" />
+        <circle cx="29" cy="23" r="2.6" fill="#cbbfa9" />
+        <circle cx="38" cy="23" r="2.6" fill="#cbbfa9" />
+        <path d="M32 46h34M32 58h56M32 70h24" stroke="#ded3bf" stroke-width="2.4" stroke-linecap="round" />
+        <circle cx="92" cy="76" r="13" fill="#14532d" />
+        <path d="M86 76h12M92 70v12" stroke="#fff" stroke-width="2.2" stroke-linecap="round" />
+      </svg>
+      <h3 id="empty-title">No customers yet</h3>
+      <p id="empty-text">Add a customer to start tracking credit, payments and reminders.</p>
+      <button class="btn btn-primary" id="empty-action" type="button">Add your first customer</button>
+    </div>
+
+    <footer class="app-foot">
+      <details class="data-tools" id="data-tools">
+        <summary>Import data</summary>
+        <p class="data-hint">Paste a JSON export of your ledger. Importing replaces the data on this device.</p>
+        <textarea class="import-box" id="import-box" spellcheck="false" autocomplete="off" aria-label="Ledger JSON to import" placeholder='{"customers":[ ... ]}'></textarea>
+        <button class="btn btn-primary" id="import-go" type="button">Import JSON</button>
+      </details>
+      <button class="link-btn" id="reset-btn" type="button">Clear all data</button>
+      <p class="app-foot-note">Saved on this device · Works offline</p>
+    </footer>
+  </div>
+
+  <button class="fab" id="fab" type="button" aria-label="Add new customer">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <div class="backdrop" id="customer-sheet" aria-hidden="true">
+    <section class="sheet sheet-compact" role="dialog" aria-modal="true" aria-labelledby="customer-sheet-title" tabindex="-1">
+      <div class="sheet-grip" aria-hidden="true"></div>
+      <header class="sheet-head">
+        <h2 class="sheet-title" id="customer-sheet-title">New customer</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </header>
+
+      <form id="customer-form" novalidate>
+        <label class="field">
+          <span>Name</span>
+          <input id="customer-name" name="name" type="text" autocomplete="name" maxlength="40" placeholder="e.g. Anil Kumar" required />
+        </label>
+
+        <label class="field">
+          <span>WhatsApp number</span>
+          <span class="phone-field">
+            <span class="phone-prefix" aria-hidden="true">+91</span>
+            <input id="customer-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98765 43210" required />
+          </span>
+        </label>
+
+        <p class="form-error" id="customer-error" role="alert" hidden></p>
+
+        <button class="btn btn-primary" type="submit" id="customer-submit">Add customer</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="backdrop" id="detail-sheet" aria-hidden="true">
+    <section class="sheet sheet-detail" role="dialog" aria-modal="true" aria-labelledby="detail-name" tabindex="-1">
+      <div class="sheet-grip" aria-hidden="true"></div>
+      <button class="icon-btn sheet-close" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <div class="detail-head">
+        <span class="avatar avatar-lg" id="detail-avatar">?</span>
+        <h2 class="detail-name" id="detail-name">Customer</h2>
+        <a class="detail-phone" id="detail-phone" href="tel:">—</a>
+      </div>
+
+      <div class="detail-panel is-due" id="detail-panel">
+        <span class="detail-panel-label" id="detail-balance-label">Outstanding</span>
+        <p class="detail-panel-amount"><span class="cur">₹</span><span id="detail-balance">0</span></p>
+        <span class="detail-panel-note" id="detail-balance-note"></span>
+      </div>
+
+      <a class="btn btn-whatsapp" id="detail-remind" href="#" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="btn-icon">
+          <path d="M12 3.2a8.7 8.7 0 0 0-7.4 13.3L3.3 21l4.6-1.2A8.7 8.7 0 1 0 12 3.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+          <path d="M9.3 8.2c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.6 1.3c.1.2 0 .4-.1.6l-.5.6c-.1.2-.2.3 0 .6.4.7 1.4 1.7 2.3 2.1.3.1.4.1.6-.1l.6-.7c.2-.2.4-.2.6-.1l1.3.7c.2.1.3.2.3.4 0 .4-.2 1.2-.7 1.6-.5.4-1.1.6-1.9.4-1.1-.2-2.2-.8-3.3-1.8-.9-.9-1.7-1.9-2-2.7-.3-.9 0-1.6.3-2Z" fill="currentColor" />
+        </svg>
+        <span>Send WhatsApp reminder</span>
+      </a>
+
+      <div class="entry-tabs" role="tablist" aria-label="Entry type">
+        <button class="entry-tab is-active" id="tab-credit" type="button" role="tab" aria-selected="true" aria-controls="credit-form" data-entry-tab="credit">Gave credit</button>
+        <button class="entry-tab" id="tab-payment" type="button" role="tab" aria-selected="false" aria-controls="payment-form" data-entry-tab="payment">Got payment</button>
+      </div>
+
+      <form class="entry-form" id="credit-form" data-entry-panel="credit" novalidate>
+        <div class="field-row">
+          <label class="field">
+            <span>Amount (₹)</span>
+            <input id="credit-amount" name="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" />
+          </label>
+          <label class="field field-date">
+            <span>Date</span>
+            <input id="credit-date" name="date" type="date" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Note <em>optional</em></span>
+          <input id="credit-note" name="note" type="text" placeholder="Rice, oil, soap…" maxlength="80" autocomplete="off" />
+        </label>
+
+        <button class="btn btn-primary" type="submit" id="credit-submit">Add credit</button>
+      </form>
+
+      <form class="entry-form" id="payment-form" data-entry-panel="payment" novalidate hidden>
+        <div class="field-row">
+          <label class="field">
+            <span>Amount (₹)</span>
+            <input id="payment-amount" name="amount" type="text" inputmode="decimal" placeholder="0" autocomplete="off" />
+          </label>
+          <label class="field field-date">
+            <span>Date</span>
+            <input id="payment-date" name="date" type="date" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Note <em>optional</em></span>
+          <input id="payment-note" name="note" type="text" placeholder="UPI, cash, part payment…" maxlength="80" autocomplete="off" />
+        </label>
+
+        <div class="field">
+          <span>Payment screenshot <em>optional</em></span>
+          <input class="file-input" id="shot-input" type="file" accept="image/*" aria-describedby="shot-hint" />
+          <span class="field-hint" id="shot-hint">Saved on this device as a compressed image.</span>
+        </div>
+
+        <div class="shot-preview" id="shot-preview-wrap" hidden>
+          <img id="shot-preview" data-shot="preview" alt="Payment screenshot preview" />
+          <button class="shot-remove" id="shot-remove" type="button">Remove image</button>
+        </div>
+
+        <button class="btn btn-primary" type="submit" id="payment-submit">Save payment</button>
+      </form>
+
+      <div class="entries-head">
+        <h3>History</h3>
+        <span class="count-pill" id="detail-entries-count">0</span>
+      </div>
+      <ul class="entries" id="detail-entries"></ul>
+      <p class="entries-empty" id="entries-empty" hidden>No entries yet. Add the first one above.</p>
+
+      <div class="detail-actions">
+        <button class="btn btn-ghost" type="button" id="detail-edit">Edit</button>
+        <button class="btn btn-ghost is-danger" type="button" id="detail-delete">Delete customer</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="shot-viewer" id="shot-viewer" hidden>
+    <button class="shot-viewer-close" id="shot-viewer-close" type="button" aria-label="Close screenshot">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </button>
+    <img id="shot-viewer-img" alt="Payment screenshot" />
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <noscript>
+    <p style="max-width: 375px; margin: 0 auto; padding: 16px; font-family: sans-serif;">
+      Hisaab needs JavaScript enabled to keep your ledger.
+    </p>
+  </noscript>
+
+  <script src="app.js"></script>
+</body>
+</html>
